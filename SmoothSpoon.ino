@@ -16,6 +16,12 @@ const int buttonPin = 7;
 int buttonState = LOW;
 int lastButtonState = LOW;
 bool buttonPressed = false; // Flag to track if button is pressed
+int redLedPin = 10;
+int yellowLedPin = 9;
+int greenLedPin = 8;
+bool showGreenPin = true;
+bool showWorking = true;
+int flashState = 0;
 
 double average(int a[], int n)
 {
@@ -75,6 +81,9 @@ void loop()
     {
         if (loading)
         {
+            digitalWrite(redLedPin, LOW);
+            digitalWrite(yellowLedPin, HIGH);
+            digitalWrite(greenLedPin, LOW);
             lcd.clear();
             lcd.write("Loading...");
             if (currentMillis - previousMillis >= 1000) // Display loading for 1 second
@@ -85,6 +94,9 @@ void loop()
         }
         else
         {
+            digitalWrite(redLedPin, LOW);
+            digitalWrite(yellowLedPin, LOW);
+            digitalWrite(greenLedPin, HIGH);
             if (showWelcome)
             {
                 lcd.clear();
@@ -129,29 +141,87 @@ void loop()
     }
     else if (screen == 2)
     {
-      lcd.clear();
-      lcd.write("Press Button");
-      lcd.setCursor(0, 1);
-      lcd.write("to stop");
+      if (showGreenPin)
+      {
+        digitalWrite(redLedPin, LOW);
+        digitalWrite(yellowLedPin, LOW);
+        digitalWrite(greenLedPin, HIGH);
+      }
+      else
+      {
+        digitalWrite(redLedPin, LOW);
+        digitalWrite(yellowLedPin, LOW);
+        digitalWrite(greenLedPin, LOW);
+      }
+      
+      if (currentMillis - previousMillis >= 1000) // Flash every 1 second
+      {
+        showGreenPin = !showGreenPin;
+        showWorking = !showWorking;
+        previousMillis = currentMillis;
+      }
+      
+      if (showWorking)
+      {
+        lcd.clear();
+        lcd.write("Working...");
+      }
+      else
+      {
+        lcd.clear();
+        lcd.write("Press Button");
+        lcd.setCursor(0, 1);
+        lcd.write("to stop");
+      }
       
       buttonState = digitalRead(buttonPin);
       if (buttonState == LOW && lastButtonState == HIGH)
       {
         screen++;
+        lastButtonState = LOW;
       }
       
       lastButtonState = buttonState;
     }
     else if (screen == 3)
     {
-        lcd.clear();
-        lcd.write("Thank you");
-        lcd.setCursor(0, 1);
-        lcd.write("for using");
-        delay(1000);
-        lcd.clear();
-        lcd.write("SmoothSpoon");
-        exit(0);
+        digitalWrite(redLedPin, HIGH);
+        digitalWrite(yellowLedPin, LOW);
+        digitalWrite(greenLedPin, LOW);
+      
+        // Flashing text between "Thank you for using", "SmoothSpoon", and "Press Button to restart"
+        if (currentMillis - previousMillis >= 1500) // Flash every 1.5 second
+        {
+            lcd.clear();
+            switch (flashState)
+            {
+                case 0:
+                    lcd.write("Thank you");
+                    lcd.setCursor(0, 1);
+                    lcd.write("for using");
+                    break;
+                case 1:
+                    lcd.write("SmoothSpoon");
+                    break;
+                case 2:
+                    lcd.write("Press Button");
+                    lcd.setCursor(0, 1);
+                    lcd.write("to restart");
+                    break;
+            }
+            flashState = (flashState + 1) % 3; // Cycle through the states
+            previousMillis = currentMillis;
+        }   
+      
+        buttonState = digitalRead(buttonPin);
+        if (buttonState == LOW && lastButtonState == HIGH)
+        {
+          screen = 1;
+          buttonPressed = false;
+          lastButtonState = LOW;
+        }
+      
+        lastButtonState = buttonState;
     }
 
     index += 1;
