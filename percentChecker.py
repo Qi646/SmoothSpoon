@@ -11,10 +11,9 @@ def nthColumn(n):
             values.append(row[n])
     return values
 
-
 def percentError():
     rowExample = nthColumn(1)
-    rowUser = nthColumn(3)
+    rowUser = nthColumn(2)
     percentError = []
     for i in range(len(rowExample)):
         percentError.append(int(abs((int(rowExample[i])-int(rowUser[i]))/int(rowUser[i])) * 100))
